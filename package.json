@@ -1,13 +1,9 @@
 {
   "name": "auto-ai",
   "private": true,
-  "author": {
-    "name": "Yashraj Narke"
-  },
   "workspaces": [
     "apps/*"
   ],
-  "license": "Apache-2.0",
   "scripts": {
     "dev:server": "cd apps/server && bun dev",
     "dev:web": "cd apps/web && bun dev",
