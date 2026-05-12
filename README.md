@@ -153,14 +153,6 @@ auto-ai/
 
 The app uses Supabase for authentication with JWT tokens. Protected routes require a valid auth token in the `Authorization` header.
 
-## 📄 License
-
-Apache License 2.0 — See LICENSE file for details
-
-## 👤 Author
-
-Yashraj Narke
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
