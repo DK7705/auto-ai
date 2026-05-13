@@ -34,3 +34,15 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .DS_Store
 
 dataset.csv 
+
+# Next.js build output
+.next
+
+# Trained models (binary)
+*.joblib
+
+# Uploaded datasets
+apps/server/uploads/*.csv
+
+# Cursor
+.cursor

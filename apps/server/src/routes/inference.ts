@@ -4,7 +4,7 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import path from "path";
 import { TRPCError } from "@trpc/server";
-import { ModelService } from "src/services/model";
+import { ModelService } from "../services/model";
 import fs from "fs";
 
 const execAsync = promisify(exec);

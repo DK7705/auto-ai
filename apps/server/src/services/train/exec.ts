@@ -24,7 +24,7 @@ export class Exec {
             reject(new Error(`Command failed: ${error.message}`));
             return;
           }
-          resolve(stdout + stderr);
+          resolve(String(stdout) + String(stderr));
         }
       );
     });

@@ -6,7 +6,7 @@
   ],
   "scripts": {
     "dev:server": "cd apps/server && bun dev",
-    "dev:web": "cd apps/web && bun dev",
+    "dev:web": "cd apps/web && bun dev -- -p 3001",
     "dev": "concurrently  --names \"server,web\" \"bun run dev:server\" \"bun run dev:web\"",
     "db:generate":"cd apps/server && bunx prisma generate "
   },

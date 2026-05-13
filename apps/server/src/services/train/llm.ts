@@ -38,7 +38,7 @@ export class LLMService {
     this.tools = this.buildLangChainTools(toolConfigs);
     this.toolHandlers = this.buildToolHandlerMap(toolConfigs);
     this.model = new ChatGoogleGenerativeAI({
-      apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+      apiKey: process.env.GOOGLE_API_KEY!,
       model: config.MODEL_ID,
     }).bindTools(this.tools);
   }

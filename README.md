@@ -34,30 +34,72 @@ This is a monorepo containing:
 ## 📦 Prerequisites
 
 - [Bun](https://bun.sh) (runtime and package manager)
-- Node.js 18+ (for compatibility)
-- Python 3.10+ (for ML models)
-- MongoDB instance or connection string
+- [Node.js 18+](https://nodejs.org) (for compatibility)
+- [Python 3.13+](https://python.org) (for ML models)
+- [uv](https://docs.astral.sh/uv/) (Python project manager — used by the training agent)
+- MongoDB instance ([MongoDB Atlas](https://cloud.mongodb.com) free tier works)
+- [Supabase](https://supabase.com) project (for GitHub OAuth authentication)
+- [Google AI API Key](https://aistudio.google.com/apikey) (for Gemini LLM-powered training)
 
-## 🔧 Environment Setup
+## 🔧 Credential Setup
 
-Create a `.env.local` file in `apps/server`:
+> **No secrets are committed to this repo.** You must create your own `.env` files from the provided templates.
+
+### Step 1 — Server Environment
+
+```bash
+cp apps/server/.env.example apps/server/.env
+```
+
+Edit `apps/server/.env`:
 
 ```env
-# Database
-DATABASE_URL=mongodb+srv://user:password@cluster.mongodb.net/auto-ai
+# MongoDB connection string (Atlas or local)
+DATABASE_URL=mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net/<dbname>
 
-# Supabase
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your_anon_key
-
-# API Keys
+# Google Gemini API key (from https://aistudio.google.com/apikey)
 GOOGLE_API_KEY=your_google_genai_api_key
-JWT_SECRET=your_jwt_secret_key
 
-# Server
+# Must be your Supabase anon key (used to verify JWTs issued by Supabase)
+JWT_SECRET=your_supabase_anon_key
+
+# Server port
 PORT=3000
-NODE_ENV=development
 ```
+
+### Step 2 — Frontend Environment
+
+```bash
+cp apps/web/.env.local.example apps/web/.env.local
+```
+
+Edit `apps/web/.env.local`:
+
+```env
+# From Supabase Dashboard → Settings → API
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Optional: service role key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# Backend API URL (must match server PORT above)
+NEXT_PUBLIC_API_URL=http://localhost:3000
+```
+
+### Step 3 — Supabase GitHub OAuth
+
+1. Go to [github.com/settings/developers](https://github.com/settings/developers) → **New OAuth App**
+2. Set **Authorization callback URL** to: `https://<your-supabase-ref>.supabase.co/auth/v1/callback`
+3. Copy the Client ID and Client Secret
+4. In Supabase Dashboard → **Authentication → Providers → GitHub** → enable and paste both values
+
+### Step 4 — MongoDB
+
+1. Create a free cluster on [MongoDB Atlas](https://cloud.mongodb.com)
+2. Create a database user
+3. Add your IP to the Network Access whitelist (or `0.0.0.0/0` for dev)
+4. Copy the connection string into `DATABASE_URL`
 
 ## 🎯 Getting Started
 
@@ -86,41 +128,28 @@ bun run dev:server  # Backend on http://localhost:3000
 bun run dev:web     # Frontend on http://localhost:3001
 ```
 
-## 📚 API Routes
+## 📚 tRPC API Routes
 
-### Authentication
-- `POST /api/auth/login` — User login
-- `POST /api/auth/signup` — User registration
+All routes use tRPC (not REST). Access via `/trpc` endpoint.
 
-### Models
-- `GET /api/models` — List all models
-- `POST /api/models` — Create new model
-- `GET /api/models/:id` — Get model details
-- `PUT /api/models/:id` — Update model
-- `DELETE /api/models/:id` — Delete model
-
-### Inference
-- `POST /api/inference` — Run model inference
-- `GET /api/inference/stats` — Get inference statistics
-
-### Training
-- `POST /api/train` — Start model training
-- `GET /api/train/:id` — Get training status
-
-### Upload
-- `POST /api/upload` — Upload files
+| Route | Type | Auth | Description |
+|-------|------|------|-------------|
+| `stats` | Query | ✅ | Dashboard statistics |
+| `models` | Query | ✅ | List user's trained models |
+| `upload` | Mutation | ✅ | Upload CSV dataset (base64) |
+| `train` | Mutation | ✅ | Start model training from dataset |
+| `inference` | Mutation | ✅ | Run prediction on trained model |
+| `inferenceHistory` | Query | ✅ | Paginated inference history |
+| `getInference` | Query | ✅ | Get specific inference by ID |
 
 ## 🐍 Python ML Services
 
-Located in `apps/server/models/`:
+Located in `apps/server/models/`. Python dependencies are managed automatically by `uv` during training.
 
+Manual inference:
 ```bash
-# Install Python dependencies
-cd apps/server/models
-pip install -r requirements.txt
-
-# Run inference
-python run.py --model-path path/to/model --input data.json
+uv run --with joblib --with pandas --with numpy --with scikit-learn \
+  python apps/server/models/inference.py <model.joblib> <input.json>
 ```
 
 ## 📂 Project Layout
@@ -128,30 +157,44 @@ python run.py --model-path path/to/model --input data.json
 ```
 auto-ai/
 ├── apps/
-│   ├── server/          # Backend API
+│   ├── server/              # Express.js + tRPC backend
 │   │   ├── src/
-│   │   ├── models/      # Python ML services
-│   │   ├── prisma/      # Database schema
+│   │   │   ├── routes/      # tRPC route handlers
+│   │   │   ├── services/    # Business logic
+│   │   │   ├── types/       # TypeScript types & Zod schemas
+│   │   │   └── utils/       # JWT, logger helpers
+│   │   ├── models/          # Python ML inference scripts
+│   │   ├── prisma/          # MongoDB schema
+│   │   ├── uploads/         # Uploaded CSV storage (gitignored)
+│   │   ├── .env.example     # ← Server env template
 │   │   └── package.json
-│   ├── web/             # Frontend app
-│   │   ├── app/         # Next.js app directory
-│   │   ├── components/  # React components
-│   │   ├── lib/         # Utilities
-│   │   └── package.json
-├── package.json         # Root workspace config
+│   └── web/                 # Next.js frontend
+│       ├── app/             # App router pages
+│       ├── components/      # React + shadcn/ui components
+│       ├── hooks/           # Custom React hooks
+│       ├── lib/             # Supabase, tRPC, utils
+│       ├── .env.local.example # ← Frontend env template
+│       └── package.json
+├── package.json             # Root workspace config
 └── README.md
 ```
 
 ## 🧪 Available Scripts
 
-- `bun run dev` — Start both server and web concurrently
-- `bun run dev:server` — Start backend only
-- `bun run dev:web` — Start frontend only
-- `bun run db:generate` — Generate Prisma client
+| Command | Description |
+|---------|-------------|
+| `bun run dev` | Start both server and web concurrently |
+| `bun run dev:server` | Start backend only (port 3000) |
+| `bun run dev:web` | Start frontend only (port 3001) |
+| `bun run db:generate` | Generate Prisma client from schema |
 
 ## 🔐 Authentication
 
-The app uses Supabase for authentication with JWT tokens. Protected routes require a valid auth token in the `Authorization` header.
+Uses Supabase OAuth (GitHub provider). The flow:
+1. User clicks "Continue with GitHub" → redirected to GitHub
+2. GitHub redirects back to Supabase → Supabase issues JWT
+3. Frontend sends JWT as `Authorization: Bearer <token>` on all tRPC calls
+4. Server verifies JWT using the Supabase anon key (`JWT_SECRET`)
 
 ## 🤝 Contributing
 

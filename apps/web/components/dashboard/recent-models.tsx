@@ -9,7 +9,7 @@ export function RecentModels() {
   if (error) return <div>Error: {error.message}</div>;
   return (
     <div className="space-y-4">
-      {models && models?.map((model, index) => (
+      {models && (models as any[]).map((model: any, index: number) => (
         <div
           key={index}
           className="flex items-center justify-between p-4 border rounded-lg"

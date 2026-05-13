@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { LoginForm } from "@/components/login-form";
 
 export default function Home() {
@@ -11,7 +12,9 @@ export default function Home() {
 
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
           <div>
-            <LoginForm />
+            <Suspense fallback={<div className="text-center p-8">Loading...</div>}>
+              <LoginForm />
+            </Suspense>
           </div>
         </div>
       </div>

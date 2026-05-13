@@ -5,7 +5,7 @@ import { statsRoute } from "./src/routes/stats";
 import cors from "cors";
 import { modelsRoute } from "./src/routes/models";
 import { uploadRoute } from "./src/routes/upload";
-import { trainRoute } from "src/routes/train";
+import { trainRoute } from "./src/routes/train";
 import { inferenceRoute, inferenceHistoryRoute, getInferenceRoute } from "./src/routes/inference";
 
 const app = express();
@@ -38,8 +38,12 @@ app.use(
 );
 
 app.use("/trpc-panel", async (_, res) => {
-  const { renderTrpcPanel } = await import("trpc-ui");
-  return res.send(renderTrpcPanel(appRouter, { url: "/trpc" }));
+  try {
+    const { renderTrpcPanel } = await import("trpc-ui");
+    return res.send(renderTrpcPanel(appRouter, { url: "/trpc" }));
+  } catch (error) {
+    return res.status(500).send("tRPC Panel is unavailable (Zod v4 compatibility issue with trpc-ui). Use the tRPC endpoints directly.");
+  }
 });
 
 app.listen(PORT, () => {

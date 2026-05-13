@@ -1,10 +1,10 @@
-import { AgentService } from "src/services/train/agent";
-import { UploadService } from "src/services/upload";
-import { protectedProcedure } from "src/trpc";
+import { AgentService } from "../services/train/agent";
+import { UploadService } from "../services/upload";
+import { protectedProcedure } from "../trpc";
 import z from "zod";
 import crypto from "crypto";
 import { ModelState } from "@prisma/client";
-import { ModelService } from "src/services/model";
+import { ModelService } from "../services/model";
 
 export const trainRoute = protectedProcedure
     .input(z.string()) // dataset id
